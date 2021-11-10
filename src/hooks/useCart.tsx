@@ -58,15 +58,25 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       localStorage.setItem(CART_KEY, JSON.stringify(newCart));
 
     } catch {
-      // TODO
+      toast.error('Erro na adição do produto');
     }
   };
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO
+      const productIndex = cart.findIndex(product => product.id === productId);
+
+      if (productIndex < 0) {
+        throw new Error();
+      }
+
+      const newCart = [...cart];
+      newCart.splice(productIndex, 1);
+
+      setCart(newCart);
+      localStorage.setItem(CART_KEY, JSON.stringify(newCart));
     } catch {
-      // TODO
+      toast.error('Erro na remoção do produto');
     }
   };
 
@@ -75,9 +85,24 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO
+      if (amount <= 0) {
+        return;
+      }
+
+      const {data} = await api.get<Stock>(`/stock/${productId}`);
+      const isAvailableInStock = amount < data.amount;
+      
+      if (!isAvailableInStock) {
+        toast.error('Quantidade solicitada fora de estoque');
+        return;
+      }
+
+      const newCart = cart.map(product => product.id === productId ? {...product, amount} : product);
+      setCart(newCart);
+      localStorage.setItem(CART_KEY, JSON.stringify(newCart));
+
     } catch {
-      // TODO
+      toast.error('Erro na alteração de quantidade do produto');
     }
   };
 
